@@ -23,18 +23,22 @@ from data_handling.DataLoader import get_dataloader
 
 
 def validate(data_loader, model, beam_size, sos_ind, eos_ind, vocabulary, log_dir, epoch, device, is_keyword, keywords_list):
-
-    val_logger = logger.bind(indent=1)
+    
+    # device: determines the device that the tensor is evaluated by (CPU / cuda:'0'). Either CPU or first GPU 
+    
+    val_logger = logger.bind(indent=1) # logging
     model.eval()
-    with torch.no_grad():
+    with torch.no_grad():  # disables gradient calculation (does not do backward pass, which is done by default) for all tensors that are in this "loop"
         start_time = time.time()
         y_hat_all = []
         ref_captions_dict = []
         file_names_all = []
 
-        for batch_idx, eval_batch in tqdm(enumerate(data_loader), total=len(data_loader)):
-
-            src, target_dicts, audio_ids, _, file_names = eval_batch
+        for batch_idx, eval_batch in tqdm(enumerate(data_loader), total=len(data_loader)): # enumerate outputs the number of the current iteration (integer) and the current iteration
+                                                                                          # if we are in the first iteration: (0, 'logistic regression')
+            # tqdm: creates a progress bar that we can see in the terminal
+                
+            src, target_dicts, audio_ids, _, file_names = eval_batch # defines these four objects by referring to the data loader's data
             src = src.to(device)
 
             if is_keyword:
@@ -42,31 +46,32 @@ def validate(data_loader, model, beam_size, sos_ind, eos_ind, vocabulary, log_di
                 kw = kw.to(device)
             else:
                 kw = None
-            if beam_size == 1:
+            if beam_size == 1: # beam size one equals greedy decoding
                 output = greedy_decode(model, src, keyword=kw, sos_ind=sos_ind, eos_ind=eos_ind)
-            else:
+            else:   # do beam decoding
                 output = beam_decode(src, model, keyword=kw, sos_ind=sos_ind, eos_ind=eos_ind, beam_width=beam_size)
 
-            output = output[:, 1:].int()
-            y_hat_batch = torch.zeros(output.shape).fill_(eos_ind).to(device)
+            output = output[:, 1:].int() # make prediction
+            y_hat_batch = torch.zeros(output.shape).fill_(eos_ind).to(device) # creates tensor,
+                                                    #fills it with the EOS token's id and says it should be evaluated on CPU / GPU
 
             for i in range(output.shape[0]):    # batch_size
                 for j in range(output.shape[1]):
-                    y_hat_batch[i, j] = output[i, j]
+                    y_hat_batch[i, j] = output[i, j] # populate prediction tensor until we reach the eos token
                     if output[i, j] == eos_ind:
                         break
                     elif j == output.shape[1] - 1:
                         y_hat_batch[i, j] = eos_ind
 
-            y_hat_batch = y_hat_batch.int()
-            y_hat_all.extend(y_hat_batch.cpu())
+            y_hat_batch = y_hat_batch.int()  
+            y_hat_all.extend(y_hat_batch.cpu())  # adds the current batch's y_hat to the list of all y_hats'
             ref_captions_dict.extend(target_dicts)
             file_names_all.extend(file_names)
 
-        eval_time = time.time() - start_time
-        captions_pred, captions_gt = decode_output(y_hat_all, ref_captions_dict, file_names_all,
+        eval_time = time.time() - start_time   # calculates time needed for creating the captions
+        captions_pred, captions_gt = decode_output(y_hat_all, ref_captions_dict, file_names_all,  # gets y_pred and y_true
                                                    vocabulary, log_dir, epoch, beam_size=beam_size)
-        metrics = evaluate_metrics(captions_pred, captions_gt)
+        metrics = evaluate_metrics(captions_pred, captions_gt)  # compares prediction with actual y's 
 
         spider = metrics['spider']['score']
         cider = metrics['cider']['score']
@@ -138,7 +143,7 @@ def ensemble_validate(data_loader, model, beam_size, sos_ind, eos_ind, vocabular
             for metric, values in metrics.items():
                 val_logger.info(f'beam search (size 3): {metric:<7s}: {values["score"]:7.4f}')
 
-        return metrics
+        return metrics # pretty much identical function as validate
 
 
 if __name__ == '__main__':
@@ -192,19 +197,19 @@ if __name__ == '__main__':
         test_keywords[i] = keywords_index
 
     model_list = []
-    check_points = ['outputs/DCASE/645/pooling/factor3/after/off_ls_5_AdamW_no_keywords_finetune_data_Clotho_pooling_type_avg_seed_40/model/model_ep15.pth',
-                    'outputs/DCASE/645/pooling/factor3/after/off_ls_5_AdamW_no_keywords_finetune_data_Clotho_pooling_type_avg_seed_40/model/model_ep18.pth',
-                    'outputs/DCASE/645/pooling/factor3/after/off_ls_5_AdamW_no_keywords_finetune_data_Clotho_pooling_type_avg_seed_40/model/model_ep21.pth',
-                    'outputs/DCASE/645/pooling/factor3/after/off_ls_5_AdamW_no_keywords_finetune_data_Clotho_pooling_type_avg_seed_40/model/model_ep24.pth',
-                    'outputs/DCASE/645/pooling/factor3/after/off_ls_5_AdamW_no_keywords_finetune_data_Clotho_pooling_type_avg_seed_40/model/model_ep27.pth',
-                    'outputs/DCASE/645/pooling/factor3/after/off_ls_5_AdamW_no_keywords_finetune_data_Clotho_pooling_type_avg_seed_40/model/model_ep30.pth'
+    check_points = ['outputs/exp_1_data_Clotho_seed_20/model/best_model.pth'
+                    #'outputs/DCASE/645/pooling/factor3/after/off_ls_5_AdamW_no_keywords_finetune_data_Clotho_pooling_type_avg_seed_40/model/model_ep18.pth',
+                    #'outputs/DCASE/645/pooling/factor3/after/off_ls_5_AdamW_no_keywords_finetune_data_Clotho_pooling_type_avg_seed_40/model/model_ep21.pth',
+                    #'outputs/DCASE/645/pooling/factor3/after/off_ls_5_AdamW_no_keywords_finetune_data_Clotho_pooling_type_avg_seed_40/model/model_ep24.pth',
+                    #'outputs/DCASE/645/pooling/factor3/after/off_ls_5_AdamW_no_keywords_finetune_data_Clotho_pooling_type_avg_seed_40/model/model_ep27.pth',
+                    #'outputs/DCASE/645/pooling/factor3/after/off_ls_5_AdamW_no_keywords_finetune_data_Clotho_pooling_type_avg_seed_40/model/model_ep30.pth'
                     ]
 
     main_logger.info(f'Total {len(check_points)} checkpoints.')
 
     for i, cp in enumerate(check_points):
 
-        cp_config = torch.load(cp)['config']
+        cp_config = torch.load(cp)['config'] # loads the config of the current iteration's pytor
         model = TransformerModel(cp_config)
         model = model.to(device)
         model.eval()
