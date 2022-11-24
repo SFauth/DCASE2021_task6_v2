@@ -185,7 +185,7 @@ if __name__ == '__main__':
     eos_ind = vocabulary.index('<eos>')
 
     num_keywords = config.num_keywords
-    test_keywords_dict = load_pickle_file('data/Clotho/pickles/645/test_keywords_dict_pred_{}.p'.format(num_keywords))
+    test_keywords_dict = load_pickle_file('data/Clotho/pickles/456/test_keywords_dict_pred.p'.format(num_keywords))
     test_size = len(test_loader.dataset)
     test_keywords = np.zeros((test_size, num_keywords))
     for i in range(test_size):
