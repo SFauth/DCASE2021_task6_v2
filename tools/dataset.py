@@ -43,7 +43,7 @@ def load_metadata(dataset, csv_file):
     return meta_dict
 
 
-def pack_dataset_to_hdf5(dataset):
+def pack_dataset_to_hdf5(dataset): # this function does not manipulate the data. It just changes the format to hdf5
     """
 
     Args:
@@ -59,15 +59,15 @@ def pack_dataset_to_hdf5(dataset):
         sampling_rate = 32000
         audio_duration = 10
     elif dataset == 'Clotho':
-        sampling_rate = 44100
-        audio_duration = 30
+        sampling_rate = 44100 # 44100 samples per time unit
+        audio_duration = 30 # time units
     else:
         raise NotImplementedError(f'No dataset named: {dataset}')
 
-    max_audio_length = audio_duration * sampling_rate
+    max_audio_length = audio_duration * sampling_rate  
 
-    for split in splits:
-        csv_path = 'data/{}/csv_files/{}.csv'.format(dataset, split)
+    for split in splits:   # creating a csv, a waveforms, and a hdf5 directory for train, val and test
+        csv_path = 'data/{}/csv_files/{}.csv'.format(dataset, split) 
         audio_dir = 'data/{}/waveforms/{}/'.format(dataset, split)
         hdf5_path = 'data/{}/hdf5s/{}/'.format(dataset, split)
 
@@ -91,7 +91,11 @@ def pack_dataset_to_hdf5(dataset):
         start_time = time.time()
 
         with h5py.File(hdf5_path+'{}.h5'.format(split), 'w') as hf:
-
+            
+            
+    # .create_dataset is a package from the h5py package that creates an object of specified shape and dtype
+    
+    
             hf.create_dataset('audio_name', shape=(audio_nums,), dtype=h5py.special_dtype(vlen=str))
             hf.create_dataset('audio_length', shape=(audio_nums,), dtype=np.uint32)
             hf.create_dataset('waveform', shape=(audio_nums, max_audio_length), dtype=np.float32)
@@ -119,7 +123,7 @@ def pack_dataset_to_hdf5(dataset):
     write_pickle_file(words_freq, 'data/{}/pickles/words_freq.p'.format(dataset))
 
 
-def _create_vocabulary(captions):
+def _create_vocabulary(captions): # takes in a list of captions and produces a list of all words and their frequencies
     vocabulary = []
     for caption in captions:
         caption_words = caption.strip().split()
