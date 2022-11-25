@@ -16,5 +16,5 @@ def get_config(config_name='settings'):
     with open('settings/{}.yaml'.format(config_name), 'r') as f:
 
         config = yaml.load(f, Loader=yaml.FullLoader)
-    config = DotMap(config)
+    config = DotMap(config)  # converts the .yaml file to a dictionary that can be evaluated by the train function
     return config
