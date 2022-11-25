@@ -38,14 +38,16 @@ def train(config):
     # set up logger
     exp_name = config.exp_name
 
-    folder_name = f'{exp_name}_data_{config.dataset}_seed_{config.training.seed}'
-
+    folder_name = f'{exp_name}_data_{config.dataset}_seed_{config.training.seed}' # creates a folder name
+                                                                                # for every experiment and seed
     # output setting
-    model_output_dir = Path('outputs', folder_name, 'model')
+    model_output_dir = Path('outputs', folder_name, 'model') # create path for directory to be created in outputs 
     log_output_dir = Path('outputs', folder_name, 'logging')
 
-    model_output_dir.mkdir(parents=True, exist_ok=True)
+    model_output_dir.mkdir(parents=True, exist_ok=True)  # create directory in outputs
     log_output_dir.mkdir(parents=True, exist_ok=True)
+    
+                                 # like this, in the outputs directory, we end up with one folder for every experiment and seed
 
     logger.remove()
 
@@ -58,20 +60,24 @@ def train(config):
     main_logger = logger.bind(indent=1)
 
     # setup TensorBoard
-    writer = SummaryWriter(log_dir=str(log_output_dir) + '/tensorboard')
+    writer = SummaryWriter(log_dir=str(log_output_dir) + '/tensorboard') # initialize a SummaryWriter object that stores
+                                                                          # info on training that can be later processed with 
+                                                                          # tensorboard
 
-    # wav settings
+    # wav settings:  
+    # respecify parameters specified in the .yaml file
+    
     if config.dataset == 'AudioCaps':
         config.wav.sr = 32000
         config.wav.window_size = 1024
         config.wav.hop_length = 320
-    elif config.dataset == 'Clotho':
+    elif config.dataset == 'Clotho':    
         config.wav.sr = 44100
         config.wav.window_size = 1024
         config.wav.hop_length = 512
 
     # print training settings
-    printer = PrettyPrinter()
+    printer = PrettyPrinter() # Pretty printer allows to print differently
     main_logger.info('Training setting:\n'
                      f'{printer.pformat(config)}')
 
