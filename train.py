@@ -38,10 +38,12 @@ if __name__ == '__main__':
 
     config = get_config(args.config)
 
+    # enables the user to update the parameters in the yaml file by specifying options when calling train.py
+    
     config.exp_name = args.exp_name
     config.dataset = args.dataset
     config.data.batch_size = args.batch
-    config.training.seed = args.seed
+    config.training.seed = args.seed  
     config.word_embedding.pretrained = eval(args.word)
     config.keywords = eval(args.keywords)
     train(config)
