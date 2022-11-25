@@ -3,6 +3,9 @@
 # @Author  : Xinhao Mei @CVSSP, University of Surrey
 # @E-mail  : x.mei@surrey.ac.uk
 
+# this script just creates a function get_config, which reads in the .yaml file specified in get_config. 
+# The .yaml file contains all relevant (hyper) parameters that are used to train the model.
+# E.g. batch_size, activation and layer size of the decoder, ...
 
 import yaml
 from dotmap import DotMap
